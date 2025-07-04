@@ -1,0 +1,18 @@
+# ── Web framework
+Flask==3.0.3           # atau versi stabil terbaru
+Flask-Cors==4.0.0      # untuk CORS(app,…)
+
+# ── HTTP client
+requests==2.31.0
+
+# ── OpenAI / OpenRouter client
+openai==1.31.0         # library resmi; kompatibel dgn OpenRouter
+
+# ── Env helper
+python-dotenv==1.0.1   # load_dotenv()
+
+# ── MySQL connector
+mysql-connector-python==8.3.0
+
+# ── Production WSGI server (Railway akan menjalankan ‘web’ proses ini)
+gunicorn==21.2.0

@@ -11,7 +11,7 @@ import re
 
 load_dotenv()
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5000", "http://localhost", "http://127.0.0.1"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5000", "http://localhost", "http://127.0.0.1, http://20.2.66.68, http://20.2.66.68:5000"])
 
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
@@ -35,8 +35,7 @@ USER_TOKENS = {
     "ardyn": "35a4d3f5b54a62b25b025ceee3a519ea"
 }
 
-MOODLE_API_URL = "http://localhost/Mymoodle/moodle/webservice/rest/server.php"
-#MOODLE_SERVICE_SHORTNAME = 'course_data_api' 
+MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
 
 db_config_moodle = {
     'host': 'localhost',
@@ -44,6 +43,35 @@ db_config_moodle = {
     'password': '',
     'database': 'moodle_db'
 }
+
+def call_deepseek_openrouter(user_input, userid=None):
+    # Prompt bisa dimodifikasi agar mengenali keyword untuk memicu fungsi Moodle
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "http://20.2.66.68:5000",
+        "X-Title": "Moodle AI Assistant"
+    }
+
+    prompt = f"""
+    Kamu adalah asisten chatbot Moodle. Jika pertanyaan berisi hal seperti 'jadwal', 'tugas', atau 'pekan',
+    arahkan untuk memanggil fungsi backend lokal, bukan menjawab dengan teks biasa.
+    
+    Pertanyaan: {user_input}
+    """
+
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": "Kamu adalah asisten AI untuk mahasiswa kampus."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        return "Maaf, saya tidak bisa menjawab saat ini."
 
 def get_db_connection():
     """Membuka koneksi baru ke database Moodle."""
@@ -70,6 +98,36 @@ def simpan_session(session_id, userid, token):
     finally:
         cursor.close()
         conn.close()
+
+# --- Fungsi Baru: Memanggil Deepseek OpenRouter ---
+def call_deepseek_openrouter(user_input, userid=None):
+    # Prompt bisa dimodifikasi agar mengenali keyword untuk memicu fungsi Moodle
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "http://20.2.66.68:5000",
+        "X-Title": "Moodle AI Assistant"
+    }
+
+    prompt = f"""
+    Kamu adalah asisten chatbot Moodle. Jika pertanyaan berisi hal seperti 'jadwal', 'tugas', atau 'pekan',
+    arahkan untuk memanggil fungsi backend lokal, bukan menjawab dengan teks biasa.
+    
+    Pertanyaan: {user_input}
+    """
+
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": "Kamu adalah asisten AI untuk mahasiswa kampus."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        return "Maaf, saya tidak bisa menjawab saat ini."
 
 def get_token_by_userid(userid):
     """Mengambil token dari database berdasarkan userid."""
@@ -254,36 +312,6 @@ def get_course_section_content(course_id, section_label):
             cursor.close()
         if conn:
             conn.close()
-
-# --- Fungsi Baru: Memanggil Deepseek OpenRouter ---
-def call_deepseek_openrouter(user_input, userid=None):
-    # Prompt bisa dimodifikasi agar mengenali keyword untuk memicu fungsi Moodle
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "http://localhost:5000",
-        "X-Title": "Moodle AI Assistant"
-    }
-
-    prompt = f"""
-    Kamu adalah asisten chatbot Moodle. Jika pertanyaan berisi hal seperti 'jadwal', 'tugas', atau 'pekan',
-    arahkan untuk memanggil fungsi backend lokal, bukan menjawab dengan teks biasa.
-    
-    Pertanyaan: {user_input}
-    """
-
-    payload = {
-        "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": "Kamu adalah asisten AI untuk mahasiswa kampus."},
-            {"role": "user", "content": prompt}
-        ]
-    }
-
-    response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-    if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
-    else:
-        return "Maaf, saya tidak bisa menjawab saat ini."
 
 # --- Existing Endpoints ---
 
