@@ -11,7 +11,12 @@ import re
 
 load_dotenv()
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5000", "http://localhost", "http://127.0.0.1, http://20.2.66.68, http://20.2.66.68:5000"])
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost:5000", 
+    "http://localhost", 
+    "http://127.0.0.1", 
+    "http://20.2.66.68"
+])
 
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
@@ -38,10 +43,11 @@ USER_TOKENS = {
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
 
 db_config_moodle = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'moodle_db'
+    'host': os.getenv("DB_HOST"),
+    'user': os.getenv("DB_USER"),
+    'password': os.getenv("DB_PASSWORD"),
+    'database': os.getenv("DB_DATABASE"),
+    'port': os.getenv("DB_PORT")
 }
 
 def call_deepseek_openrouter(user_input, userid=None):
@@ -569,4 +575,5 @@ def chat():
         return jsonify({"reply": "Maaf, terjadi kesalahan internal saat memproses permintaan Anda."}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
