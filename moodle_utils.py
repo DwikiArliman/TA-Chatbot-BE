@@ -23,8 +23,8 @@ db_config_moodle = {
     'database': 'moodle_db'
 }
 
-MOODLE_API_URL = "http://localhost/Mymoodle/moodle/webservice/rest/server.php"
-MOODLE_URL = "http://localhost/Mymoodle/moodle"
+MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
+MOODLE_URL = "http://20.2.66.68"
 
 def get_jadwal(userid):
     """
