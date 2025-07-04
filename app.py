@@ -18,7 +18,6 @@ CORS(app, supports_credentials=True, origins=[
     "http://20.2.66.68"
 ])
 
-
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_DEEPSEEK_MODEL = "deepseek-ai/deepseek-chat"

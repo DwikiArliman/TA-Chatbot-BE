@@ -17,10 +17,11 @@ def get_db_connection():
     )
 
 db_config_moodle = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'moodle_db'
+    'host': os.getenv("DB_HOST"),
+    'user': os.getenv("DB_USER"),
+    'password': os.getenv("DB_PASSWORD"),
+    'database': os.getenv("DB_DATABASE"),
+    'port': os.getenv("DB_PORT")
 }
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
