@@ -16,12 +16,30 @@ def get_db_connection():
         database=os.getenv("DB_NAME", "moodle_db")
     )
 
+#db_config_moodle = {
+#    'host': os.getenv("DB_HOST"),
+#    'user': os.getenv("DB_USER"),
+#    'password': os.getenv("DB_PASSWORD"),
+#    'database': os.getenv("DB_DATABASE"),
+#    'port': os.getenv("DB_PORT")
+# }
+
+# Konfigurasi untuk Database Sesi (dari TiDB Cloud / PlanetScale)
+db_config_session = {
+    'host': os.getenv("MYSQLHOST"),
+    'user': os.getenv("MYSQLUSER"),
+    'password': os.getenv("MYSQLPASSWORD"),
+    'database': os.getenv("MYSQLDATABASE"),
+    'port': int(os.getenv("MYSQLPORT", 3306)) # Pastikan port adalah integer
+}
+
+# Konfigurasi untuk Database Moodle Utama (dari server Moodle Anda)
 db_config_moodle = {
-    'host': os.getenv("DB_HOST"),
-    'user': os.getenv("DB_USER"),
-    'password': os.getenv("DB_PASSWORD"),
-    'database': os.getenv("DB_DATABASE"),
-    'port': os.getenv("DB_PORT")
+    'host': os.getenv("MOODLE_DB_HOST"),
+    'user': os.getenv("MOODLE_DB_USER"),
+    'password': os.getenv("MOODLE_DB_PASSWORD"),
+    'database': os.getenv("MOODLE_DB_DATABASE"),
+    'port': int(os.getenv("MOODLE_DB_PORT", 3306))
 }
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
