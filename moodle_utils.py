@@ -60,8 +60,8 @@ def get_moodle_db_connection():
 
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
-#MOODLE_URL = "http://20.2.66.68"
-MOODLE_URL = f"http://{os.getenv('MOODLE_DB_HOST', 'localhost')}"
+MOODLE_URL = "http://20.2.66.68"
+#MOODLE_URL = f"http://{os.getenv('MOODLE_DB_HOST', 'localhost')}"
 
 def get_jadwal(userid):
     """
