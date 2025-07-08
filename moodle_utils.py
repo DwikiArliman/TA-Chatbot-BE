@@ -5,6 +5,7 @@ from flask_cors import CORS
 import mysql.connector
 import os
 import time
+import re
 from urllib.parse import quote
 
 # Koneksi ke DB Moodle
@@ -15,6 +16,9 @@ def get_db_connection():
         password=os.getenv("DB_PASSWORD", ""),
         database=os.getenv("DB_NAME", "moodle_db")
     )
+
+session_port = os.getenv("MYSQLPORT")
+moodle_port = os.getenv("MOODLE_DB_PORT")
 
 #db_config_moodle = {
 #    'host': os.getenv("DB_HOST"),
@@ -30,17 +34,30 @@ db_config_session = {
     'user': os.getenv("MYSQLUSER"),
     'password': os.getenv("MYSQLPASSWORD"),
     'database': os.getenv("MYSQLDATABASE"),
-    'port': int(os.getenv("MYSQLPORT", 3306)) # Pastikan port adalah integer
+    'port': int(session_port) if session_port else 4000,
+    'ssl_ca': 'ca.pem',
+    'ssl_verify_cert': True
 }
 
-# Konfigurasi untuk Database Moodle Utama (dari server Moodle Anda)
+# Konfigurasi untuk Database Moodle Utama
 db_config_moodle = {
     'host': os.getenv("MOODLE_DB_HOST"),
     'user': os.getenv("MOODLE_DB_USER"),
     'password': os.getenv("MOODLE_DB_PASSWORD"),
     'database': os.getenv("MOODLE_DB_DATABASE"),
-    'port': int(os.getenv("MOODLE_DB_PORT", 3306))
+    'port': int(moodle_port) if moodle_port else 3306
 }
+
+# --- Fungsi Koneksi yang Terpisah ---
+
+def get_session_db_connection():
+    """Membuka koneksi ke database SESI (TiDB Cloud)."""
+    return mysql.connector.connect(**db_config_session)
+
+def get_moodle_db_connection():
+    """Membuka koneksi ke database MOODLE utama."""
+    return mysql.connector.connect(**db_config_moodle)
+
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
 MOODLE_URL = "http://20.2.66.68"
