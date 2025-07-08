@@ -35,7 +35,7 @@ db_config_session = {
     'password': os.getenv("MYSQLPASSWORD"),
     'database': os.getenv("MYSQLDATABASE"),
     'port': int(session_port) if session_port else 4000,
-    'ssl_ca': 'ca.pem',
+    'ssl_ca': 'isrgrootx1.pem',
     'ssl_verify_cert': True
 }
 
