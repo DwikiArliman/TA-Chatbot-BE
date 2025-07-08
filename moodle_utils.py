@@ -48,6 +48,10 @@ db_config_moodle = {
     'port': int(moodle_port) if moodle_port else 3306
 }
 
+def get_db_connection():
+    """Membuka koneksi baru ke database Moodle."""
+    return mysql.connector.connect(**db_config_moodle)
+
 # --- Fungsi Koneksi yang Terpisah ---
 
 def get_session_db_connection():
@@ -60,7 +64,8 @@ def get_moodle_db_connection():
 
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
-MOODLE_URL = "http://20.2.66.68"
+#MOODLE_URL = "http://20.2.66.68"
+MOODLE_URL = f"http://{os.getenv('MOODLE_DB_HOST', 'localhost')}"
 
 def get_jadwal(userid):
     """
@@ -70,7 +75,7 @@ def get_jadwal(userid):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # 1. Tentukan rentang waktu: dari sekarang hingga 7 hari ke depan
@@ -115,74 +120,25 @@ def get_jadwal(userid):
             conn.close()
 
 def get_tugas_quiz_hari_ini(userid):
-    """
-    Mengambil daftar tugas dan kuis yang memiliki deadline pada hari ini
-    untuk seorang pengguna.
-    """
-    conn = None
-    cursor = None
+    conn = get_moodle_db_connection()
+    cursor = conn.cursor(dictionary=True)
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        # 1. Dapatkan rentang waktu untuk hari ini
         start_ts, end_ts = get_today_timestamp_range()
-
-        # 2. Query untuk menggabungkan tugas dan kuis
         query = """
-            (
-                SELECT
-                    'tugas' AS item_type,
-                    a.name,
-                    a.duedate,
-                    c.fullname AS course_name
-                FROM mdl_assign a
-                JOIN mdl_course c ON a.course = c.id
-                JOIN mdl_enrol e ON e.courseid = c.id
-                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id
-                WHERE a.duedate BETWEEN %s AND %s
-                AND ue.userid = %s
-            )
+            (SELECT 'tugas' AS item_type, a.name, a.duedate, c.fullname AS course_name FROM mdl_assign a JOIN mdl_course c ON a.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE a.duedate BETWEEN %s AND %s AND ue.userid = %s)
             UNION ALL
-            (
-                SELECT
-                    'kuis' AS item_type,
-                    q.name,
-                    q.timeclose AS duedate,
-                    c.fullname AS course_name
-                FROM mdl_quiz q
-                JOIN mdl_course c ON q.course = c.id
-                JOIN mdl_enrol e ON e.courseid = c.id
-                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id
-                WHERE q.timeclose BETWEEN %s AND %s
-                AND ue.userid = %s
-            )
+            (SELECT 'kuis' AS item_type, q.name, q.timeclose AS duedate, c.fullname AS course_name FROM mdl_quiz q JOIN mdl_course c ON q.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE q.timeclose BETWEEN %s AND %s AND ue.userid = %s)
             ORDER BY duedate ASC
         """
-
         cursor.execute(query, (start_ts, end_ts, userid, start_ts, end_ts, userid))
-        items = cursor.fetchall()
-        return items
-
-    except mysql.connector.Error as err:
-        print(f"Database error dalam get_tugas_quiz_hari_ini: {err}")
-        return []
-    except Exception as e:
-        print(f"Error dalam get_tugas_quiz_hari_ini: {e}")
-        return []
+        return cursor.fetchall()
     finally:
-        if cursor:
-            cursor.close()
-        if conn and conn.is_connected():
-            conn.close()
-
-def get_db_connection():
-    """Membuka koneksi baru ke database Moodle."""
-    return mysql.connector.connect(**db_config_moodle)
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 def simpan_session(session_id, userid, token):
     """Menyimpan atau memperbarui sesi chatbot di database."""
-    conn = get_db_connection()
+    conn = get_session_db_connection()
     cursor = conn.cursor()
     try:
         sql = """
@@ -223,25 +179,16 @@ def get_token_by_userid(userid):
             conn.close()
 
 def get_today_timestamp_range():
-    """Mengembalikan rentang timestamp awal dan akhir hari ini."""
     now = datetime.now()
     start = datetime(now.year, now.month, now.day)
     end = start + timedelta(days=1)
     return int(start.timestamp()), int(end.timestamp())
 
 def format_tanggal_indonesia(timestamp):
-    """Memformat timestamp ke format tanggal dan waktu Indonesia."""
-    hari_mapping = {
-        'Monday': 'Senin', 'Tuesday': 'Selasa', 'Wednesday': 'Rabu',
-        'Thursday': 'Kamis', 'Friday': 'Jumat', 'Saturday': 'Sabtu', 'Sunday': 'Minggu'
-    }
-    bulan_mapping = {
-        'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
-        'April': 'April', 'May': 'Mei', 'June': 'Juni',
-        'July': 'Juli', 'August': 'Agustus', 'September': 'September',
-        'October': 'Oktober', 'November': 'November', 'December': 'Desember'
-    }
+    if not timestamp: return "Tidak ada tanggal"
     dt = datetime.fromtimestamp(timestamp)
+    hari_mapping = {'Monday':'Senin','Tuesday':'Selasa','Wednesday':'Rabu','Thursday':'Kamis','Friday':'Jumat','Saturday':'Sabtu','Sunday':'Minggu'}
+    bulan_mapping = {'January':'Januari','February':'Februari','March':'Maret','April':'April','May':'Mei','June':'Juni','July':'Juli','August':'Agustus','September':'September','October':'Oktober','November':'November','December':'Desember'}
     hari = hari_mapping.get(dt.strftime('%A'), dt.strftime('%A'))
     bulan = bulan_mapping.get(dt.strftime('%B'), dt.strftime('%B'))
     return f"{hari}, {dt.day:02d} {bulan} {dt.year} Pukul: {dt.strftime('%H:%M')}"
@@ -256,26 +203,38 @@ def format_tanggal_indonesia(timestamp):
         except Exception as e:
             print("Gagal parsing user ID dari session:", e)
     return None
+
+def simpan_session(session_id, userid, token):
+    conn = get_session_db_connection()
+    cursor = conn.cursor()
+    try:
+        sql = "INSERT INTO mdl_chatbot_sessions (session_id, userid, token, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW()) ON DUPLICATE KEY UPDATE userid = VALUES(userid), token = VALUES(token), updated_at = NOW()"
+        cursor.execute(sql, (session_id, userid, token))
+        conn.commit()
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 def get_user_session_data(session_id):
-    conn = get_session_db_connection() # KONEKSI BENAR
+    conn = get_session_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("SELECT userid, token FROM mdl_chatbot_sessions WHERE session_id = %s", (session_id,))
         return cursor.fetchone()
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 def get_user_fullname(userid):
-    conn = get_moodle_db_connection() # KONEKSI BENAR
+    conn = get_moodle_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("SELECT firstname, lastname FROM mdl_user WHERE id = %s", (userid,))
         user = cursor.fetchone()
         return f"{user['firstname']} {user['lastname']}".strip() if user else "Pengguna"
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 def get_userid_from_token(token):
@@ -335,45 +294,21 @@ def is_user_admin(userid):
         conn.close()
 
 def is_user_teacher(userid):
-    """
-    Memeriksa apakah seorang pengguna memiliki peran sebagai dosen
-    (teacher atau editingteacher) di salah satu mata kuliah.
-    """
-    conn = None
-    cursor = None
+    conn = get_moodle_db_connection()
+    cursor = conn.cursor(dictionary=True)
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # Query untuk menghitung berapa kali user ini berperan sebagai dosen
-        query = """
-            SELECT COUNT(ra.id) AS teacher_role_count
-            FROM mdl_role_assignments ra
-            JOIN mdl_role r ON ra.roleid = r.id
-            WHERE ra.userid = %s
-            AND r.shortname IN ('teacher', 'editingteacher')
-        """
+        query = "SELECT COUNT(ra.id) AS teacher_role_count FROM mdl_role_assignments ra JOIN mdl_role r ON ra.roleid = r.id WHERE ra.userid = %s AND r.shortname IN ('teacher', 'editingteacher')"
         cursor.execute(query, (userid,))
         result = cursor.fetchone()
-        
-        # Jika jumlahnya lebih dari 0, maka dia adalah dosen
-        if result and result['teacher_role_count'] > 0:
-            return True
-        return False
-
-    except Exception as e:
-        print(f"Error dalam is_user_teacher: {e}")
-        return False # Anggap bukan dosen jika terjadi error
+        return result and result['teacher_role_count'] > 0
     finally:
-        if cursor:
-            cursor.close()
-        if conn and conn.is_connected():
-            conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 def get_course_fullname_by_id(course_id):
     """Mengambil nama lengkap mata kuliah berdasarkan ID."""
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
         query = "SELECT fullname FROM mdl_course WHERE id = %s"
         cursor.execute(query, (course_id,))
@@ -421,7 +356,7 @@ def get_course_section_content(course_id, section_label):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
             section_number = int(section_label)
@@ -449,7 +384,7 @@ def get_tugas_quiz_minggu_ini(userid):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # 1. Tentukan rentang waktu pekan ini (Senin 00:00 - Minggu 23:59)
@@ -543,7 +478,7 @@ def get_dosen_info_for_mahasiswa(student_userid, partial_course_name):
     cursor = None
     
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # Langkah 1: Cari ID dan nama lengkap mata kuliah berdasarkan nama parsial.
@@ -631,7 +566,7 @@ def get_dosen_profile(partial_teacher_name):
     cursor = None
     
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         if not conn:
             return "Tidak dapat terhubung ke database. Silakan coba lagi nanti."
 
@@ -714,7 +649,7 @@ def get_timeline_kegiatan(userid):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # 1. Tentukan waktu mulai: dari sekarang
@@ -790,7 +725,7 @@ def get_materi_matkul(userid, partial_materi_name):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # Query ini cukup kompleks karena harus menghubungkan beberapa tabel:
@@ -862,7 +797,7 @@ def get_materi_by_section(userid, course_name, section_name):
     conn = None
     cursor = None
     try:
-        conn = get_db_connection()
+        conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # Query ini mencari semua file dalam satu section dari satu mata kuliah
