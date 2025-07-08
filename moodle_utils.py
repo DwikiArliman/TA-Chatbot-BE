@@ -48,10 +48,6 @@ db_config_moodle = {
     'port': int(moodle_port) if moodle_port else 3306
 }
 
-def get_db_connection():
-    """Membuka koneksi baru ke database Moodle."""
-    return mysql.connector.connect(**db_config_moodle)
-
 # --- Fungsi Koneksi yang Terpisah ---
 
 def get_session_db_connection():

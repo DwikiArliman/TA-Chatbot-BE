@@ -41,13 +41,13 @@ USER_TOKENS = {
 
 MOODLE_API_URL = "http://20.2.66.68/moodle/webservice/rest/server.php"
 
-db_config_moodle = {
-    'host': os.getenv("DB_HOST"),
-    'user': os.getenv("DB_USER"),
-    'password': os.getenv("DB_PASSWORD"),
-    'database': os.getenv("DB_DATABASE"),
-    'port': os.getenv("DB_PORT")
-}
+#db_config_moodle = {
+#    'host': os.getenv("DB_HOST"),
+#    'user': os.getenv("DB_USER"),
+#    'password': os.getenv("DB_PASSWORD"),
+#    'database': os.getenv("DB_DATABASE"),
+#    'port': os.getenv("DB_PORT")
+#}
 
 def call_deepseek_openrouter(user_input, userid=None):
     # Prompt bisa dimodifikasi agar mengenali keyword untuk memicu fungsi Moodle
@@ -78,11 +78,11 @@ def call_deepseek_openrouter(user_input, userid=None):
     else:
         return "Maaf, saya tidak bisa menjawab saat ini."
 
-def get_db_connection():
+#def get_db_connection():
     """Membuka koneksi baru ke database Moodle."""
     return mysql.connector.connect(**db_config_moodle)
 
-def simpan_session(session_id, userid, token):
+#def simpan_session(session_id, userid, token):
     """Menyimpan atau memperbarui sesi chatbot di database."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -134,7 +134,7 @@ def call_deepseek_openrouter(user_input, userid=None):
     else:
         return "Maaf, saya tidak bisa menjawab saat ini."
 
-def get_token_by_userid(userid):
+#def get_token_by_userid(userid):
     """Mengambil token dari database berdasarkan userid."""
     conn = None
     cursor = None
@@ -178,7 +178,7 @@ def format_tanggal_indonesia(timestamp):
     bulan = bulan_mapping.get(dt.strftime('%B'), dt.strftime('%B'))
     return f"{hari}, {dt.day:02d} {bulan} {dt.year} Pukul: {dt.strftime('%H:%M')}"
 
-def get_user_id_from_session(session_id):
+#def get_user_id_from_session(session_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -192,7 +192,7 @@ def get_user_id_from_session(session_id):
         if cursor: cursor.close()
         if conn: conn.close()
 
-def get_userid_from_token(token):
+#def get_userid_from_token(token):
     """Mengambil userid dari mdl_chatbot_sessions berdasarkan token atau Moodle API."""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
