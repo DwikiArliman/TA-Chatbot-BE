@@ -364,7 +364,7 @@ def login():
         userid = data['userid']
         token = data['token']
 
-        conn = get_db_connection()
+        conn = get_session_db_connection()
         cursor = conn.cursor()
         
         # Simpan ke mdl_chatbot_sessions
