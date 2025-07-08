@@ -257,59 +257,26 @@ def format_tanggal_indonesia(timestamp):
             print("Gagal parsing user ID dari session:", e)
     return None
 def get_user_session_data(session_id):
-    """
-    Mengambil data user (userid dan token) dari database berdasarkan session_id.
-    Mengembalikan dictionary jika ditemukan, atau None jika tidak.
-    """
-    if not session_id:
-        return None
-
-    conn = None # Inisialisasi conn di luar try
+    conn = get_session_db_connection() # KONEKSI BENAR
+    cursor = conn.cursor(dictionary=True)
     try:
-        conn = get_db_connection()
-        # Menggunakan dictionary=True agar hasil bisa diakses seperti: data['userid']
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT userid, token FROM mdl_chatbot_sessions WHERE session_id = %s",
-            (session_id,)
-        )
-        user_data = cursor.fetchone()
-        return user_data
-    except Exception as e:
-        print(f"Error getting user session data: {e}")
-        return None
+        cursor.execute("SELECT userid, token FROM mdl_chatbot_sessions WHERE session_id = %s", (session_id,))
+        return cursor.fetchone()
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        cursor.close()
+        conn.close()
 
 def get_user_fullname(userid):
-    """
-    Mengambil nama lengkap user dari tabel mdl_user berdasarkan userid.
-    """
-    if not userid:
-        return "Pengguna" # Nama default jika userid tidak ada
-
-    conn = None
+    conn = get_moodle_db_connection() # KONEKSI BENAR
+    cursor = conn.cursor(dictionary=True)
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "SELECT firstname, lastname FROM mdl_user WHERE id = %s",
-            (userid,)
-        )
+        cursor.execute("SELECT firstname, lastname FROM mdl_user WHERE id = %s", (userid,))
         user = cursor.fetchone()
-        if user:
-            # Menggabungkan nama depan dan nama belakang
-            return f"{user['firstname']} {user['lastname']}".strip()
-        return "Pengguna"
-    except Exception as e:
-        print(f"Error getting user fullname: {e}")
-        return "Pengguna"
+        return f"{user['firstname']} {user['lastname']}".strip() if user else "Pengguna"
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        cursor.close()
+        conn.close()
+
 
 def get_userid_from_token(token):
     """Mengambil userid dari mdl_chatbot_sessions berdasarkan token atau Moodle API."""
