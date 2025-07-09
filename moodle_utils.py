@@ -211,8 +211,8 @@ def get_dosen_info_for_mahasiswa(student_userid, partial_course_name):
         cursor.execute(sql_find_teachers, (course['id'],))
         teachers = cursor.fetchall()
         if not teachers: return f"Tidak ada dosen yang ditugaskan untuk mata kuliah '{course['fullname']}'."
-        teacher_names = [f"{t['firstname']} {t['lastname']}" for t in teachers]
-        return f"Dosen untuk mata kuliah {course['fullname']} adalah: {', '.join(teacher_names)}."
+        teacher_names = [f"👤 {t['firstname']} {t['lastname']}" for t in teachers]
+        return f"Dosen untuk mata kuliah {course['fullname']} adalah:\n" + "\n".join(teacher_names)
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
