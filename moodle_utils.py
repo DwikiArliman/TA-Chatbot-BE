@@ -386,9 +386,16 @@ def get_dosen_profile(partial_teacher_name):
         if conn and conn.is_connected(): conn.close()
 
 def get_timeline_kegiatan(userid, limit=7, offset=0):
+    """
+    Mengambil daftar tugas dan kuis yang akan datang dengan batasan waktu dan paginasi.
+    """
     conn = get_moodle_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        # ===== PRINT STATEMENT UNTUK PEMBUKTIAN =====
+        print("--- MENJALANKAN FUNGSI get_timeline_kegiatan VERSI OPTIMAL ---")
+        # ============================================
+
         now_timestamp = int(datetime.now().timestamp())
         future_limit_timestamp = int((datetime.now() + timedelta(days=90)).timestamp())
         query = """
@@ -399,7 +406,10 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
         """
         cursor.execute(query, (now_timestamp, future_limit_timestamp, userid, now_timestamp, future_limit_timestamp, userid, limit, offset))
         items = cursor.fetchall()
-        if not items: return "Tidak ada kegiatan (tugas/kuis) yang akan datang dalam 90 hari ke depan."
+
+        if not items:
+            return "Tidak ada kegiatan (tugas/kuis) yang akan datang dalam 90 hari ke depan."
+
         reply_lines = [f"🗓️ Timeline Kegiatan Anda ({limit} berikutnya):", ""]
         for item in items:
             emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
@@ -407,9 +417,12 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
             reply_lines.append(f"   ⏰ Deadline: {format_tanggal_indonesia(item['duedate'])}")
             reply_lines.append("")
         return "\n".join(reply_lines)
+
     finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
 
 def get_materi_matkul(userid, partial_materi_name):
