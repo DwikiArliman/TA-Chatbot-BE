@@ -96,6 +96,8 @@ def chat():
         elif "timeline" in message:
             reply_text = get_timeline_kegiatan(userid)
 
+        # Di dalam file app.py, pada fungsi chat()
+
         elif "jadwal" in message:
             events = get_jadwal(userid)
             if not events:
@@ -103,12 +105,12 @@ def chat():
             else:
                 reply_lines = ["🗓️ Jadwal Anda (7 hari ke depan):", ""]
                 for event in events:
-                    # Menambahkan nama acara
-                    reply_lines.append(f"📝 {event['name']}")
-                    # Menambahkan baris waktu dengan emoji
-                    reply_lines.append(f"  ⏰ Waktu: {format_tanggal_indonesia(event['timestart'])}")
-                    # Menambahkan baris kosong sebagai pemisah
-                    reply_lines.append("")
+                    reply_lines.append(f"• {event['name']}")
+                    # Menggunakan fungsi format_tanggal yang baru
+                    reply_lines.append(f"  🗓️ Waktu: {format_tanggal(event['timestart'])}")
+                    # Menambahkan baris Pukul dengan fungsi format_waktu
+                    reply_lines.append(f"  ⏰ Pukul: {format_waktu(event['timestart'])}")
+                    reply_lines.append("") # Baris kosong sebagai pemisah
                 
                 reply_text = "\n".join(reply_lines)
 

@@ -45,6 +45,24 @@ def format_tanggal_indonesia(timestamp):
     bulan = bulan_mapping.get(dt.strftime('%B'), dt.strftime('%B'))
     return f"{hari}, {dt.day:02d} {bulan} {dt.year} Pukul: {dt.strftime('%H:%M')}"
 
+# Hapus fungsi format_tanggal_indonesia yang lama, dan ganti dengan dua ini:
+
+def format_tanggal(timestamp):
+    """Mengembalikan format tanggal: Senin, 14 Juli 2025"""
+    if not timestamp: return "Tidak ada tanggal"
+    dt = datetime.fromtimestamp(int(timestamp))
+    hari_mapping = {'Monday':'Senin','Tuesday':'Selasa','Wednesday':'Rabu','Thursday':'Kamis','Friday':'Jumat','Saturday':'Sabtu','Sunday':'Minggu'}
+    bulan_mapping = {'January':'Januari','February':'Februari','March':'Maret','April':'April','May':'Mei','June':'Juni','July':'Juli','August':'Agustus','September':'September','October':'Oktober','November':'November','December':'Desember'}
+    hari = hari_mapping.get(dt.strftime('%A'), dt.strftime('%A'))
+    bulan = bulan_mapping.get(dt.strftime('%B'), dt.strftime('%B'))
+    return f"{hari}, {dt.day:02d} {bulan} {dt.year}"
+
+def format_waktu(timestamp):
+    """Mengembalikan format waktu: 03:30"""
+    if not timestamp: return ""
+    dt = datetime.fromtimestamp(int(timestamp))
+    return dt.strftime('%H:%M')
+
 def get_today_timestamp_range():
     now = datetime.now()
     start = datetime(now.year, now.month, now.day)
