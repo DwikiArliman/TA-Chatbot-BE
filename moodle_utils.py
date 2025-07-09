@@ -274,7 +274,7 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
         print(f"--- [DIAGNOSTIK] 6. Mengambil {len(items)} baris data ---")
 
         if not items: return "Tidak ada kegiatan (tugas/kuis) yang akan datang dalam 90 hari ke depan."
-        reply_lines = [f"🗓️ Timeline Kegiatan Anda ({limit} berikutnya):", ""]
+        reply_lines = [f"🗓️ Timeline Kegiatan Anda berikutnya)"]
         for item in items:
             emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
             reply_lines.append(f"{emoji} {item['name']} (di {item['course_name']})")
