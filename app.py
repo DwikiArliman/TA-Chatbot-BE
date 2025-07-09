@@ -105,7 +105,7 @@ def chat():
             else:
                 reply_lines = ["🗓️ Jadwal Anda (7 hari ke depan):", ""]
                 for event in events:
-                    reply_lines.append(f"• {event['name']}")
+                    reply_lines.append(f" 📝 {event['name']}")
                     # Menggunakan fungsi format_tanggal yang baru
                     reply_lines.append(f"  🗓️ Waktu: {format_tanggal(event['timestart'])}")
                     # Menambahkan baris Pukul dengan fungsi format_waktu
