@@ -637,7 +637,7 @@ def get_dosen_profile(partial_teacher_name):
         if conn and conn.is_connected():
             conn.close()
 
-def get_timeline_kegiatan(userid):
+#def get_timeline_kegiatan(userid):
     """
     Mengambil daftar semua tugas dan kuis yang akan datang (timeline)
     untuk seorang pengguna, diurutkan berdasarkan tanggal.
@@ -706,6 +706,87 @@ def get_timeline_kegiatan(userid):
         return "Terjadi masalah saat mengakses database."
     except Exception as e:
         print(f"Error dalam get_timeline_kegiatan: {e}")
+        return "Terjadi kesalahan sistem yang tidak terduga."
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+def get_timeline_kegiatan(userid, limit=7, offset=0):
+    """
+    Mengambil daftar tugas dan kuis yang akan datang dengan batasan waktu dan paginasi.
+    """
+    conn = None
+    cursor = None
+    try:
+        conn = get_moodle_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Tentukan rentang waktu: dari sekarang hingga 90 hari ke depan
+        now_timestamp = int(datetime.now().timestamp())
+        future_limit_timestamp = int((datetime.now() + timedelta(days=90)).timestamp())
+
+        # 2. Query telah dioptimalkan dengan klausa BETWEEN dan LIMIT/OFFSET
+        query = """
+            (
+                SELECT
+                    'tugas' AS item_type,
+                    a.name,
+                    a.duedate,
+                    c.fullname AS course_name
+                FROM mdl_assign a
+                JOIN mdl_course c ON a.course = c.id
+                JOIN mdl_enrol e ON e.courseid = c.id
+                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id
+                WHERE a.duedate BETWEEN %s AND %s
+                AND ue.userid = %s
+            )
+            UNION ALL
+            (
+                SELECT
+                    'kuis' AS item_type,
+                    q.name,
+                    q.timeclose AS duedate,
+                    c.fullname AS course_name
+                FROM mdl_quiz q
+                JOIN mdl_course c ON q.course = c.id
+                JOIN mdl_enrol e ON e.courseid = c.id
+                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id
+                WHERE q.timeclose BETWEEN %s AND %s
+                AND ue.userid = %s
+            )
+            ORDER BY duedate ASC
+            LIMIT %s OFFSET %s
+        """
+
+        # 3. Jalankan query dengan parameter yang sudah disesuaikan
+        cursor.execute(query, (
+            now_timestamp, future_limit_timestamp, userid,
+            now_timestamp, future_limit_timestamp, userid,
+            limit, offset
+        ))
+        items = cursor.fetchall()
+
+        # 4. Format hasil untuk ditampilkan
+        if not items:
+            return "Tidak ada kegiatan (tugas/kuis) yang akan datang dalam 90 hari ke depan."
+
+        reply_lines = [f"🗓️ Timeline Kegiatan Anda ({limit} berikutnya):", ""]
+        for item in items:
+            emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
+            reply_lines.append(f"{emoji} {item['name']}")
+            reply_lines.append(f"   (Mata Kuliah: {item['course_name']})")
+            reply_lines.append(f"   ⏰ Deadline: {format_tanggal_indonesia(item['duedate'])}")
+            reply_lines.append("")
+
+        return "\n".join(reply_lines)
+
+    except mysql.connector.Error as err:
+        print(f"Database error dalam get_timeline_kegiatan (optimal): {err}")
+        return "Terjadi masalah saat mengakses database."
+    except Exception as e:
+        print(f"Error dalam get_timeline_kegiatan (optimal): {e}")
         return "Terjadi kesalahan sistem yang tidak terduga."
     finally:
         if cursor:
