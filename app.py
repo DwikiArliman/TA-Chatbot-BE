@@ -520,44 +520,37 @@ def chat():
             # Langsung kembalikan teks yang sudah diformat oleh fungsi tersebut
             return jsonify({"reply": reply_text})
         
-        elif "materi" in message.lower() or "lihat file" in message.lower() or "lihat materi" in message.lower():
+        elif "materi" in message.lower() or "lihat file" in message.lower():
             # Coba parsing untuk permintaan spesifik (contoh: "materi week 1 algoritma pemrograman")
-            # Pola regex ini mencari kata seperti "week 1", "pekan 1", "bab 2", dll.
             match = re.search(r'(week|pekan|bab|sesi|pertemuan)\s*(\d+)\s*(.*)', message.lower(), re.IGNORECASE)
 
             if match:
-                # Jika polanya cocok, ini adalah permintaan spesifik
-                section_type = match.group(1) # "week", "pekan", dll.
-                section_number = match.group(2) # "1", "2", dll.
-                course_name = match.group(3).strip() # Sisa teks adalah nama mata kuliah
-
-                # Gabungkan kembali nama section yang lengkap, contoh: "Week 1"
+                # Logika untuk menangani section spesifik
+                section_type = match.group(1)
+                section_number = match.group(2)
+                course_name = match.group(3).strip()
                 full_section_name = f"{section_type.capitalize()} {section_number}"
 
                 if not course_name:
                     reply_text = f"Tentu, materi untuk '{full_section_name}' dari mata kuliah apa yang ingin Anda lihat?"
                 else:
-                    # Panggil fungsi baru yang spesifik
                     reply_text = get_materi_by_section(userid, course_name, full_section_name)
 
             else:
-                # Jika tidak ada pola section, anggap ini permintaan umum
-                # --- PERBAIKAN LOGIKA PEMBERSIHAN ---
+                # Logika untuk pencarian materi umum
                 keywords = [
                     "lihat materi tentang", "lihat file tentang", "materi tentang",
                     "lihat materi", "lihat file", "materi", "tentang", "dari", "file"
                 ]
-                # Membuat pola regex: ^\s*(keyword1|keyword2|...)\s*
-                # Ini akan menghapus kata kunci HANYA jika ada di awal kalimat.
                 pattern = r'^\s*(' + '|'.join(keywords) + r')\s*'
-                
-                # Bersihkan pesan dari kata kunci menggunakan regex
                 materi_name = re.sub(pattern, '', message.lower(), flags=re.IGNORECASE).strip()
 
-                if not materi_name:
-                    reply_text = "Tentu, materi apa yang ingin Anda lihat? Contoh: 'materi pengenalan basis data' atau 'materi week 1 algoritma'"
+                # --- PERBAIKAN KRUSIAL DI SINI ---
+                # Mencegah query berat dengan memvalidasi input terlebih dahulu
+                if not materi_name or len(materi_name) < 3:
+                    reply_text = "Tentu, materi spesifik apa yang ingin Anda cari? Mohon berikan nama yang lebih jelas (minimal 3 huruf)."
                 else:
-                    # Panggil fungsi umum dengan nama materi yang sudah bersih
+                    # Panggil database hanya jika ada input yang valid
                     reply_text = get_materi_matkul(userid, materi_name)
             
             return jsonify({"reply": reply_text})
