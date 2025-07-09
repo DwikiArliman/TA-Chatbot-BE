@@ -101,7 +101,16 @@ def chat():
             if not events:
                 reply_text = "Tidak ada jadwal ditemukan untuk Anda dalam 7 hari ke depan."
             else:
-                reply_text = "🗓️ Jadwal Anda (7 hari ke depan):\n\n" + "\n".join([f"• {e['name']} - {format_tanggal_indonesia(e['timestart'])}" for e in events])
+                reply_lines = ["🗓️ Jadwal Anda (7 hari ke depan):", ""]
+                for event in events:
+                    # Menambahkan nama acara
+                    reply_lines.append(f"• {event['name']}")
+                    # Menambahkan baris waktu dengan emoji
+                    reply_lines.append(f"  ⏰ Waktu: {format_tanggal_indonesia(event['timestart'])}")
+                    # Menambahkan baris kosong sebagai pemisah
+                    reply_lines.append("")
+                
+                reply_text = "\n".join(reply_lines)
 
         elif "tugas hari ini" in message:
             items = get_tugas_quiz_hari_ini(userid)
