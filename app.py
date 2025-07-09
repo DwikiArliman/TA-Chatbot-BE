@@ -104,7 +104,7 @@ def chat():
                 reply_lines = ["🗓️ Jadwal Anda (7 hari ke depan):", ""]
                 for event in events:
                     # Menambahkan nama acara
-                    reply_lines.append(f"• {event['name']}")
+                    reply_lines.append(f"📝 {event['name']}")
                     # Menambahkan baris waktu dengan emoji
                     reply_lines.append(f"  ⏰ Waktu: {format_tanggal_indonesia(event['timestart'])}")
                     # Menambahkan baris kosong sebagai pemisah
