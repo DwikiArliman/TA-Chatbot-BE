@@ -70,9 +70,6 @@ def chat():
     # ===============================================
 
     print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
-    # ... sisa kode fungsi Anda ...
-    """Endpoint utama untuk interaksi chatbot."""
-    print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
     try:
         data = request.get_json()
         if data is None:

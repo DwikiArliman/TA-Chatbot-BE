@@ -212,9 +212,14 @@ def get_dosen_profile(partial_teacher_name):
 def get_timeline_kegiatan(userid, limit=7, offset=0):
     conn = None; cursor = None
     try:
+        print("--- [DIAGNOSTIK] 1. Memulai fungsi get_timeline_kegiatan ---")
+        
+        print("--- [DIAGNOSTIK] 2. Mencoba terhubung ke database Moodle... ---")
         conn = get_moodle_db_connection()
+        print("--- [DIAGNOSTIK] 3. KONEKSI BERHASIL ---")
+        
         cursor = conn.cursor(dictionary=True)
-        print("--- MENJALANKAN FUNGSI get_timeline_kegiatan VERSI OPTIMAL ---")
+        
         now_ts = int(datetime.now().timestamp())
         end_ts = int((datetime.now() + timedelta(days=90)).timestamp())
         query = """
@@ -223,8 +228,14 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
             (SELECT 'kuis' AS item_type, q.name, q.timeclose AS duedate, c.fullname AS course_name FROM mdl_quiz q JOIN mdl_course c ON q.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE q.timeclose BETWEEN %s AND %s AND ue.userid = %s)
             ORDER BY duedate ASC LIMIT %s OFFSET %s
         """
+        
+        print("--- [DIAGNOSTIK] 4. Mencoba menjalankan query SQL... ---")
         cursor.execute(query, (now_ts, end_ts, userid, now_ts, end_ts, userid, limit, offset))
+        print("--- [DIAGNOSTIK] 5. QUERY BERHASIL DIJALANKAN ---")
+
         items = cursor.fetchall()
+        print(f"--- [DIAGNOSTIK] 6. Mengambil {len(items)} baris data ---")
+
         if not items: return "Tidak ada kegiatan (tugas/kuis) yang akan datang dalam 90 hari ke depan."
         reply_lines = [f"🗓️ Timeline Kegiatan Anda ({limit} berikutnya):", ""]
         for item in items:
@@ -233,9 +244,13 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
             reply_lines.append(f"   ⏰ Deadline: {format_tanggal_indonesia(item['duedate'])}")
             reply_lines.append("")
         return "\n".join(reply_lines)
+    except Exception as e:
+        print(f"--- [DIAGNOSTIK] ERROR TERJADI: {e}")
+        return "Terjadi kesalahan saat memproses data timeline."
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
+        print("--- [DIAGNOSTIK] 7. Fungsi selesai dan koneksi ditutup ---")
 
 def get_materi_matkul(userid, partial_materi_name):
     conn = None; cursor = None
