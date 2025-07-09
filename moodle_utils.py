@@ -94,12 +94,29 @@ def get_jadwal(userid):
         cursor = conn.cursor(dictionary=True)
         now_ts = int(datetime.now().timestamp())
         end_ts = int((datetime.now() + timedelta(days=7)).timestamp())
+        
+        # --- QUERY YANG DIPERBARUI ---
         query = """
-            SELECT name, timestart FROM mdl_event
-            WHERE (eventtype = 'user' AND userid = %s) AND timestart BETWEEN %s AND %s
-            ORDER BY timestart ASC LIMIT 10
+            SELECT name, timestart 
+            FROM mdl_event
+            WHERE 
+                (
+                    -- Ambil event pribadi milik user
+                    (eventtype = 'user' AND userid = %s)
+                    OR 
+                    -- Ambil event dari mata kuliah yang diikuti user
+                    (eventtype = 'course' AND courseid IN (
+                        SELECT e.courseid 
+                        FROM mdl_user_enrolments ue 
+                        JOIN mdl_enrol e ON ue.enrolid = e.id
+                        WHERE ue.userid = %s
+                    ))
+                )
+                AND timestart BETWEEN %s AND %s
+            ORDER BY timestart ASC 
+            LIMIT 10
         """
-        cursor.execute(query, (userid, now_ts, end_ts))
+        cursor.execute(query, (userid, userid, now_ts, end_ts))
         return cursor.fetchall()
     finally:
         if cursor: cursor.close()
@@ -133,15 +150,35 @@ def get_tugas_quiz_minggu_ini(userid):
         end_of_week = (start_of_week + timedelta(days=6)).replace(hour=23, minute=59, second=59)
         start_ts = int(start_of_week.timestamp())
         end_ts = int(end_of_week.timestamp())
+
+        # --- QUERY YANG DIPERBARUI DENGAN FILTER VISIBILITY ---
         query = """
-            (SELECT 'tugas' AS item_type, a.name, a.duedate, c.fullname AS course_name FROM mdl_assign a JOIN mdl_course c ON a.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE a.duedate BETWEEN %s AND %s AND ue.userid = %s)
+            (
+                SELECT 'tugas' AS item_type, a.name, a.duedate, c.fullname AS course_name 
+                FROM mdl_assign a 
+                JOIN mdl_course c ON a.course = c.id
+                JOIN mdl_course_modules cm ON cm.instance = a.id AND cm.module = (SELECT id FROM mdl_modules WHERE name = 'assign')
+                JOIN mdl_enrol e ON e.courseid = c.id 
+                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id 
+                WHERE a.duedate BETWEEN %s AND %s AND ue.userid = %s AND cm.visible = 1
+            )
             UNION ALL
-            (SELECT 'kuis' AS item_type, q.name, q.timeclose AS duedate, c.fullname AS course_name FROM mdl_quiz q JOIN mdl_course c ON q.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE q.timeclose BETWEEN %s AND %s AND ue.userid = %s)
-            ORDER BY duedate ASC LIMIT 15
+            (
+                SELECT 'kuis' AS item_type, q.name, q.timeclose AS duedate, c.fullname AS course_name 
+                FROM mdl_quiz q 
+                JOIN mdl_course c ON q.course = c.id 
+                JOIN mdl_course_modules cm ON cm.instance = q.id AND cm.module = (SELECT id FROM mdl_modules WHERE name = 'quiz')
+                JOIN mdl_enrol e ON e.courseid = c.id 
+                JOIN mdl_user_enrolments ue ON ue.enrolid = e.id 
+                WHERE q.timeclose BETWEEN %s AND %s AND ue.userid = %s AND cm.visible = 1
+            )
+            ORDER BY duedate ASC 
+            LIMIT 15
         """
         cursor.execute(query, (start_ts, end_ts, userid, start_ts, end_ts, userid))
         items = cursor.fetchall()
-        if not items: return "Tidak ada tugas atau kuis dengan deadline pekan ini."
+        
+        if not items: return "Tidak ada tugas atau kuis yang terlihat dengan deadline pekan ini."
         reply_lines = ["Berikut adalah daftar tugas dan kuis untuk pekan ini:", ""]
         for item in items:
             emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
