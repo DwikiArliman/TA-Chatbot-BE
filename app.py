@@ -65,6 +65,12 @@ def login():
 
 @app.route('/chat', methods=['POST'])
 def chat():
+    # ===== TAMBAHKAN PRINT INI UNTUK PEMBUKTIAN =====
+    print("--- CHAT ENDPOINT VERSI 1.1 DIAKSES (DENGAN OPTIMASI) ---")
+    # ===============================================
+
+    print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
+    # ... sisa kode fungsi Anda ...
     """Endpoint utama untuk interaksi chatbot."""
     print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
     try:
