@@ -156,7 +156,7 @@ def chat():
                 pattern = r'^\s*(' + '|'.join(keywords) + r')\s*'
                 materi_name = re.sub(pattern, '', message, flags=re.IGNORECASE).strip()
                 if not materi_name or len(materi_name) < 3:
-                    reply_text = "Tentu, materi spesifik apa yang ingin Anda cari? Contoh : lihat materi week 1 etika."
+                    reply_text = "Tentu, materi spesifik apa yang ingin Anda cari? Contoh : lihat materi week 1 Algoritma Pemrograman."
                 else:
                     reply_text = get_materi_matkul(userid, materi_name)
         
