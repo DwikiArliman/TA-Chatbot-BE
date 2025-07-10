@@ -42,7 +42,7 @@ def call_deepseek_openrouter(user_input, userid=None):
         return response.json()["choices"][0]["message"]["content"]
     except requests.exceptions.RequestException as e:
         print(f"[AI_ERROR] Gagal menghubungi OpenRouter: {e}")
-        return "Maaf, layanan AI sedang tidak tersedia."
+        return "Maaf, Saya tidak mengerti, coba gunakan fitur quick reply button untuk mengirimkan pertanyaan."
 
 @app.route('/login', methods=['POST'])
 def login():
