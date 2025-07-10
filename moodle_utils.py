@@ -213,7 +213,7 @@ def get_tugas_quiz_minggu_ini(userid):
         reply_lines = ["Berikut adalah daftar tugas dan kuis untuk minggu ini:", ""]
         for item in items:
             emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
-            reply_lines.append(f"{emoji} {item['name']} (di {item['course_name']})")
+            reply_lines.append(f"{emoji} {item['name']} ({item['course_name']})")
             reply_lines.append(f"   ⏰ Deadline: {format_tanggal_indonesia(item['duedate'])}")
             reply_lines.append("")
         return "\n".join(reply_lines)
