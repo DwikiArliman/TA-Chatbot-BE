@@ -52,7 +52,7 @@ def login():
         data = request.get_json()
         if data is None:
             return jsonify({'status': 'error', 'message': 'Invalid JSON request.'}), 400
-        print(f"--- DATA DITERIMA DI /login ---\n{data}")
+        #print(f"--- DATA DITERIMA DI /login ---\n{data}")
         simpan_session(data['session_id'], data['userid'], data['token'])
         print("[LOGIN_SUCCESS] Data login berhasil disimpan.")
         return jsonify({'status': 'success', 'message': 'Login data saved successfully.'})
@@ -74,7 +74,7 @@ def chat():
         data = request.get_json()
         if data is None:
             return jsonify({'reply': 'Error: Format request tidak valid.'}), 400
-        print(f"--- DATA DITERIMA DI /chat ---\n{data}")
+        #print(f"--- DATA DITERIMA DI /chat ---\n{data}")
 
         session_id = data.get("session_id", "")
         message = data.get("message", "").lower()
