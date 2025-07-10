@@ -47,7 +47,7 @@ def call_deepseek_openrouter(user_input, userid=None):
 @app.route('/login', methods=['POST'])
 def login():
     """Endpoint untuk menyimpan data sesi saat user login."""
-    print("\n--- MENCOBA MEMPROSES REQUEST DI /login ---")
+    #print("\n--- MENCOBA MEMPROSES REQUEST DI /login ---")
     try:
         data = request.get_json()
         if data is None:
@@ -66,10 +66,10 @@ def login():
 @app.route('/chat', methods=['POST'])
 def chat():
     # ===== TAMBAHKAN PRINT INI UNTUK PEMBUKTIAN =====
-    print("--- CHAT ENDPOINT VERSI 1.1 DIAKSES (DENGAN OPTIMASI) ---")
+    #print("--- CHAT ENDPOINT VERSI 1.1 DIAKSES (DENGAN OPTIMASI) ---")
     # ===============================================
 
-    print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
+    #print("\n--- MENCOBA MEMPROSES REQUEST DI /chat ---")
     try:
         data = request.get_json()
         if data is None:
