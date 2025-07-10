@@ -119,7 +119,7 @@ def chat():
             if not items:
                 reply_text = "Tidak ada tugas atau kuis dengan deadline hari ini. Selamat bersantai!"
             else:
-                reply_lines = [" échéance Hari Ini:"]
+                reply_lines = [" Tugas dan Kuis Hari Ini:"]
                 for item in items:
                     emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
                     reply_lines.append(f"{emoji} {item['name']} ({item['course_name']}) - ⏰ {format_tanggal_indonesia(item['duedate'])}")

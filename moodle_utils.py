@@ -210,7 +210,7 @@ def get_tugas_quiz_minggu_ini(userid):
         items = cursor.fetchall()
         
         if not items: return "Tidak ada tugas atau kuis yang terlihat dengan deadline pekan ini."
-        reply_lines = ["Berikut adalah daftar tugas dan kuis untuk pekan ini:", ""]
+        reply_lines = ["Berikut adalah daftar tugas dan kuis untuk minggu ini:", ""]
         for item in items:
             emoji = "📝" if item['item_type'] == 'tugas' else "🧪"
             reply_lines.append(f"{emoji} {item['name']} (di {item['course_name']})")
