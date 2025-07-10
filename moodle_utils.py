@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import mysql.connector
 import os
+import time
 from urllib.parse import quote
 
 # --- Konfigurasi Database ---
@@ -45,7 +46,16 @@ def format_tanggal_indonesia(timestamp):
     bulan = bulan_mapping.get(dt.strftime('%B'), dt.strftime('%B'))
     return f"{hari}, {dt.day:02d} {bulan} {dt.year} Pukul: {dt.strftime('%H:%M')}"
 
-# Hapus fungsi format_tanggal_indonesia yang lama, dan ganti dengan dua ini:
+def timer_decorator(func):
+    """Decorator untuk mengukur dan mencetak waktu eksekusi sebuah fungsi."""
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        duration = end_time - start_time
+        print(f"--- [PERF] Fungsi '{func.__name__}' selesai dalam {duration:.4f} detik ---")
+        return result
+    return wrapper
 
 def format_tanggal(timestamp):
     """Mengembalikan format tanggal: Senin, 14 Juli 2025"""
