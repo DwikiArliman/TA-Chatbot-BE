@@ -115,6 +115,7 @@ def get_user_fullname(userid):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_jadwal(userid):
     conn = None; cursor = None
     try:
@@ -150,6 +151,7 @@ def get_jadwal(userid):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_tugas_quiz_hari_ini(userid):
     conn = None; cursor = None
     try:
@@ -168,6 +170,7 @@ def get_tugas_quiz_hari_ini(userid):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_tugas_quiz_minggu_ini(userid):
     conn = None; cursor = None
     try:
@@ -218,6 +221,7 @@ def get_tugas_quiz_minggu_ini(userid):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_dosen_info_for_mahasiswa(student_userid, partial_course_name):
     conn = None; cursor = None
     try:
@@ -245,6 +249,7 @@ def get_dosen_info_for_mahasiswa(student_userid, partial_course_name):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_dosen_profile(partial_teacher_name):
     conn = None; cursor = None
     try:
@@ -273,7 +278,8 @@ def get_dosen_profile(partial_teacher_name):
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
-
+        
+@timer_decorator
 def get_timeline_kegiatan(userid, limit=7, offset=0):
     conn = None; cursor = None
     try:
@@ -317,6 +323,7 @@ def get_timeline_kegiatan(userid, limit=7, offset=0):
         if conn and conn.is_connected(): conn.close()
         print("--- [DIAGNOSTIK] 7. Fungsi selesai dan koneksi ditutup ---")
 
+@timer_decorator
 def get_materi_matkul(userid, partial_materi_name):
     conn = None; cursor = None
     try:
@@ -334,6 +341,7 @@ def get_materi_matkul(userid, partial_materi_name):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
+@timer_decorator
 def get_materi_by_section(userid, course_name, section_name):
     conn = None; cursor = None
     try:
