@@ -25,10 +25,12 @@ def call_deepseek_openrouter(user_input, userid=None):
     """Memanggil model AI generatif jika tidak ada keyword yang cocok."""
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": os.getenv("MOODLE_URL", "http://20.2.66.68"), # Mengambil dari env
+        "HTTP-Referer": os.getenv("MOODLE_URL", "http://20.2.66.68"),
         "X-Title": "Moodle AI Assistant"
     }
+    
     prompt = f"Kamu adalah asisten AI untuk mahasiswa. Jawab pertanyaan berikut dengan singkat dan jelas. Pertanyaan: {user_input}"
+    
     payload = {
         "model": "deepseek-ai/deepseek-chat",
         "messages": [
@@ -36,13 +38,24 @@ def call_deepseek_openrouter(user_input, userid=None):
             {"role": "user", "content": prompt}
         ]
     }
+    
     try:
+        print(f"[AI_DEBUG] Mengirim request ke Deepseek dengan prompt: {prompt}")
         response = requests.post(f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=20)
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        
+        result = response.json()
+        ai_answer = result["choices"][0]["message"]["content"]
+        print(f"[AI_DEBUG] Response dari Deepseek: {ai_answer}")
+        return ai_answer
+    
     except requests.exceptions.RequestException as e:
         print(f"[AI_ERROR] Gagal menghubungi OpenRouter: {e}")
         return "Maaf, Saya tidak mengerti, coba gunakan fitur quick reply button untuk mengirimkan pertanyaan."
+    except Exception as e:
+        print(f"[AI_ERROR] Error tak terduga: {e}")
+        return "Maaf, terjadi kesalahan internal."
+
 
 @app.route('/login', methods=['POST'])
 def login():
