@@ -21,66 +21,28 @@ CORS(app, supports_credentials=True, origins=[
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-def call_deepseek_openrouter(user_input: str, userid: str = None, max_retries: int = 3, retry_delay: int = 2):
-    """
-    Memanggil model AI generatif (DeepSeek) dengan mekanisme coba lagi (retry) jika gagal.
-
-    Args:
-        user_input (str): Pertanyaan dari pengguna.
-        userid (str, optional): ID pengguna, saat ini tidak digunakan tapi disiapkan untuk pengembangan di masa depan.
-        max_retries (int, optional): Jumlah maksimum percobaan ulang. Defaultnya adalah 3.
-        retry_delay (int, optional): Jeda waktu (dalam detik) antar percobaan ulang. Defaultnya adalah 2.
-
-    Returns:
-        str: Jawaban dari AI atau pesan fallback jika semua percobaan gagal.
-    """
-    if not OPENROUTER_API_KEY:
-        print("[AI_ERROR] Variabel environment OPENROUTER_API_KEY tidak diatur.")
-        return "Maaf, konfigurasi asisten AI belum lengkap. Harap hubungi administrator."
-
+def call_deepseek_openrouter(user_input, userid=None):
+    """Memanggil model AI generatif jika tidak ada keyword yang cocok."""
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": MOODLE_URL,
+        "HTTP-Referer": os.getenv("MOODLE_URL", "http://20.2.66.68"), # Mengambil dari env
         "X-Title": "Moodle AI Assistant"
     }
-
-    # ✨ Penyempurnaan prompt:
-    # Instruksi umum ditempatkan di 'system', dan pertanyaan pengguna langsung di 'user'.
-    # Ini adalah praktik yang lebih baik dan sering memberikan hasil yang lebih konsisten.
+    prompt = f"Kamu adalah asisten AI untuk mahasiswa. Jawab pertanyaan berikut dengan singkat dan jelas. Pertanyaan: {user_input}"
     payload = {
         "model": "deepseek-ai/deepseek-chat",
         "messages": [
-            {"role": "system", "content": "Kamu adalah asisten AI yang ramah dan sangat membantu untuk mahasiswa. Jawab semua pertanyaan terkait kegiatan perkuliahan mereka di Moodle dengan singkat, jelas, dan akurat."},
-            {"role": "user", "content": user_input}
+            {"role": "system", "content": "Kamu adalah asisten AI yang membantu mahasiswa terkait kegiatan perkuliahan mereka di Moodle."},
+            {"role": "user", "content": prompt}
         ]
     }
-
-    # ⚙️ Mekanisme coba lagi (retry)
-    for attempt in range(max_retries):
-        try:
-            print(f"[AI_INFO] Menghubungi DeepSeek... (Percobaan {attempt + 1}/{max_retries})")
-            response = requests.post(
-                f"{OPENROUTER_BASE_URL}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=25  # Timeout sedikit lebih lama untuk koneksi yang lambat
-            )
-            # Ini akan memicu error (exception) jika status code adalah 4xx atau 5xx
-            response.raise_for_status()
-
-            # Jika berhasil, ekstrak pesan, kembalikan, dan hentikan fungsi
-            return response.json()["choices"][0]["message"]["content"]
-
-        except requests.exceptions.RequestException as e:
-            print(f"[AI_WARNING] Gagal pada percobaan {attempt + 1}: {e}")
-            # Jika ini adalah percobaan terakhir, loop akan berhenti dan fallback akan dijalankan
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)  # Tunggu sejenak sebelum mencoba lagi
-            else:
-                print(f"[AI_ERROR] Semua {max_retries} percobaan gagal. Menggunakan pesan fallback.")
-
-    # Pesan fallback ini hanya akan dikembalikan jika semua percobaan dalam loop gagal
-    return "Maaf, asisten AI sedang mengalami sedikit gangguan. Silakan coba lagi beberapa saat lagi atau gunakan tombol bantuan yang tersedia."
+    try:
+        response = requests.post(f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=20)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+    except requests.exceptions.RequestException as e:
+        print(f"[AI_ERROR] Gagal menghubungi OpenRouter: {e}")
+        return "Maaf, Saya tidak mengerti, coba gunakan fitur quick reply button untuk mengirimkan pertanyaan."
 
 @app.route('/login', methods=['POST'])
 def login():
