@@ -32,7 +32,7 @@ def call_deepseek_openrouter(user_input, userid=None):
     prompt = f"Kamu adalah asisten AI untuk mahasiswa. Jawab pertanyaan berikut dengan singkat dan jelas. Pertanyaan: {user_input}"
     
     payload = {
-        "model": "deepseek-ai/deepseek-chat",
+        "model": "deepseek/deepseek-chat",
         "messages": [
             {"role": "system", "content": "Kamu adalah asisten AI yang membantu mahasiswa terkait kegiatan perkuliahan mereka di Moodle."},
             {"role": "user", "content": prompt}
