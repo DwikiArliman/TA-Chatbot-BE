@@ -329,7 +329,32 @@ def get_materi_matkul(userid, partial_materi_name):
     try:
         conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT f.contextid, f.component, f.filearea, f.itemid, f.filename, r.name AS resource_name, c.fullname AS course_name FROM mdl_files f JOIN mdl_context ctx ON f.contextid = ctx.id JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 JOIN mdl_resource r ON cm.instance = r.id JOIN mdl_course c ON cm.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE ue.userid = %s AND r.name LIKE %s AND f.component = 'mod_resource' AND f.filearea = 'content' AND f.filename != '.' AND (f.filename LIKE '%.pdf' OR f.filename LIKE '%.ppt' OR f.filename LIKE '%.pptx') LIMIT 1"
+        #query = "SELECT f.contextid, f.component, f.filearea, f.itemid, f.filename, r.name AS resource_name, c.fullname AS course_name FROM mdl_files f JOIN mdl_context ctx ON f.contextid = ctx.id JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 JOIN mdl_resource r ON cm.instance = r.id JOIN mdl_course c ON cm.course = c.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE ue.userid = %s AND r.name LIKE %s AND f.component = 'mod_resource' AND f.filearea = 'content' AND f.filename != '.' AND (f.filename LIKE '%.pdf' OR f.filename LIKE '%.ppt' OR f.filename LIKE '%.pptx') LIMIT 1"
+        query = """
+            SELECT 
+                f.contextid, f.component, f.filearea, f.itemid, f.filename, 
+                r.name AS resource_name, c.fullname AS course_name 
+            FROM mdl_files f 
+            JOIN mdl_context ctx ON f.contextid = ctx.id 
+            JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 
+            JOIN mdl_resource r ON cm.instance = r.id 
+            JOIN mdl_course c ON cm.course = c.id 
+            JOIN mdl_enrol e ON e.courseid = c.id 
+            JOIN mdl_user_enrolments ue ON ue.enrolid = e.id 
+            WHERE ue.userid = %s 
+            AND r.name LIKE %s 
+            AND f.component = 'mod_resource' 
+            AND f.filearea = 'content' 
+            AND f.filename != '.' 
+            AND (
+                f.filename LIKE '%.pdf' OR 
+                f.filename LIKE '%.ppt' OR 
+                f.filename LIKE '%.pptx' OR
+                f.filename LIKE '%.doc' OR
+                f.filename LIKE '%.docx'
+            )
+            LIMIT 1
+        """
         cursor.execute(query, (userid, f"%{partial_materi_name}%"))
         file_info = cursor.fetchone()
         if not file_info: return f"Maaf, materi '{partial_materi_name}' tidak ditemukan."
@@ -347,7 +372,34 @@ def get_materi_by_section(userid, course_name, section_name):
     try:
         conn = get_moodle_db_connection()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT f.contextid, f.component, f.filearea, f.itemid, f.filename, r.name AS resource_name, c.fullname AS course_name, cs.name AS section_name FROM mdl_files f JOIN mdl_context ctx ON f.contextid = ctx.id JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 JOIN mdl_resource r ON cm.instance = r.id JOIN mdl_course c ON cm.course = c.id JOIN mdl_course_sections cs ON cm.section = cs.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE ue.userid = %s AND c.fullname LIKE %s AND cs.name LIKE %s AND f.component = 'mod_resource' AND f.filearea = 'content' AND f.filename != '.' AND (f.mimetype = 'application/pdf' OR f.mimetype LIKE 'application/vnd.ms-powerpoint%') LIMIT 15"
+        #query = "SELECT f.contextid, f.component, f.filearea, f.itemid, f.filename, r.name AS resource_name, c.fullname AS course_name, cs.name AS section_name FROM mdl_files f JOIN mdl_context ctx ON f.contextid = ctx.id JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 JOIN mdl_resource r ON cm.instance = r.id JOIN mdl_course c ON cm.course = c.id JOIN mdl_course_sections cs ON cm.section = cs.id JOIN mdl_enrol e ON e.courseid = c.id JOIN mdl_user_enrolments ue ON ue.enrolid = e.id WHERE ue.userid = %s AND c.fullname LIKE %s AND cs.name LIKE %s AND f.component = 'mod_resource' AND f.filearea = 'content' AND f.filename != '.' AND (f.mimetype = 'application/pdf' OR f.mimetype LIKE 'application/vnd.ms-powerpoint%') LIMIT 15"
+        query = """
+            SELECT 
+                f.contextid, f.component, f.filearea, f.itemid, f.filename, 
+                r.name AS resource_name, c.fullname AS course_name, cs.name AS section_name 
+            FROM mdl_files f 
+            JOIN mdl_context ctx ON f.contextid = ctx.id 
+            JOIN mdl_course_modules cm ON ctx.instanceid = cm.id AND ctx.contextlevel = 70 
+            JOIN mdl_resource r ON cm.instance = r.id 
+            JOIN mdl_course c ON cm.course = c.id 
+            JOIN mdl_course_sections cs ON cm.section = cs.id 
+            JOIN mdl_enrol e ON e.courseid = c.id 
+            JOIN mdl_user_enrolments ue ON ue.enrolid = e.id 
+            WHERE ue.userid = %s 
+            AND c.fullname LIKE %s 
+            AND cs.name LIKE %s 
+            AND f.component = 'mod_resource' 
+            AND f.filearea = 'content' 
+            AND f.filename != '.' 
+            AND (
+                f.filename LIKE '%.pdf' OR 
+                f.filename LIKE '%.ppt' OR 
+                f.filename LIKE '%.pptx' OR
+                f.filename LIKE '%.doc' OR
+                f.filename LIKE '%.docx'
+            )   
+            LIMIT 15
+        """
         cursor.execute(query, (userid, f"%{course_name}%", f"%{section_name}%"))
         files = cursor.fetchall()
         if not files: return f"Maaf, saya tidak bisa menemukan materi di '{section_name}' pada mata kuliah '{course_name}'."
